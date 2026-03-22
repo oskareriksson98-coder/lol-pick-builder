@@ -443,7 +443,8 @@ function loadFile(file) {
     prev.src = ev.target.result;
     prev.style.display = 'block';
     dz.style.display = 'none';
-    if (getKey()) document.getElementById('analyzeBtn').disabled = false;
+    // Always enable button if image is loaded — key check happens in analyze()
+    document.getElementById('analyzeBtn').disabled = false;
   };
   r.readAsDataURL(file);
 }
