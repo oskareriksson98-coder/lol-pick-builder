@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rammus vs Amumu · Pick Advisor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --gold: #C89B3C;
+  --gold-light: #F0E6C8;
+  --gold-dim: #6B500F;
+  --dark: #010A13;
+  --panel: #071520;
+  --panel2: #0D1E2E;
+  --border: #1A3047;
+  --border2: #243F58;
+  --blue: #0BC4E3;
+  --text: #8BA3B8;
+  --text2: #C8D8E8;
+  --rammus: #4EAA74;
+  --rammus-dim: rgba(78,170,116,0.12);
+  --amumu: #8B6CC4;
+  --amumu-dim: rgba(139,108,196,0.12);
+  --mr: #7C3AED;
+  --armor: #B45309;
+  --danger: #DC2626;
+  --warn: #D97706;
+  --safe: #059669;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: var(--dark); font-family: 'Barlow', sans-serif; color: var(--text); min-height: 100vh; }
+
+.bg {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(11,196,227,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 10% 80%, rgba(200,155,60,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 60% at 90% 90%, rgba(78,170,116,0.03) 0%, transparent 60%);
+}
+
+.bg-grid {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image: linear-gradient(rgba(11,196,227,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(11,196,227,0.025) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse at center, black 20%, transparent 80%);
+}
+
+.wrap { position: relative; z-index: 1; max-width: 780px; margin: 0 auto; padding: 40px 20px 100px; }
+
+header { text-align: center; margin-bottom: 40px; animation: fadeDown 0.6s ease; }
+@keyframes fadeDown { from { opacity:0; transform:translateY(-12px); } to { opacity:1; transform:translateY(0); } }
+@keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+.header-icons { display: flex; align-items: center; justify-content: center; gap: 24px; margin-bottom: 12px; }
+.h-champ { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.h-champ-circle { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 26px; }
+.h-champ-circle.rc { background: radial-gradient(circle, rgba(78,170,116,0.2), rgba(78,170,116,0.05)); border: 2px solid var(--rammus); box-shadow: 0 0 20px rgba(78,170,116,0.2); }
+.h-champ-circle.ac { background: radial-gradient(circle, rgba(139,108,196,0.2), rgba(139,108,196,0.05)); border: 2px solid var(--amumu); box-shadow: 0 0 20px rgba(139,108,196,0.2); }
+.h-champ-name { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; opacity: 0.6; }
+.h-vs { font-family: 'Cinzel', serif; font-size: 11px; color: var(--gold); letter-spacing: 4px; opacity: 0.7; }
+h1 { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 600; color: var(--gold); letter-spacing: 6px; text-transform: uppercase; margin-bottom: 6px; }
+.tagline { font-size: 13px; color: var(--text); opacity: 0.55; letter-spacing: 0.5px; }
+
+/* STAT STRIP */
+.stat-strip { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 28px; animation: fadeUp 0.5s ease 0.1s both; }
+.stat-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; display: flex; align-items: center; gap: 14px; }
+.stat-card-icon { font-size: 28px; flex-shrink: 0; }
+.stat-card-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; opacity: 0.45; margin-bottom: 2px; }
+.stat-card-champ { font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 1px; margin-bottom: 6px; }
+.stat-card-champ.r { color: var(--rammus); }
+.stat-card-champ.a { color: var(--amumu); }
+.stat-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.stat-pill { font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 600; letter-spacing: 0.5px; }
+.stat-pill.wr { background: rgba(5,150,105,0.15); color: #34D399; border: 1px solid rgba(5,150,105,0.3); }
+.stat-pill.pr { background: rgba(200,155,60,0.1); color: var(--gold); border: 1px solid rgba(200,155,60,0.25); }
+.stat-pill.tier { background: rgba(11,196,227,0.1); color: var(--blue); border: 1px solid rgba(11,196,227,0.2); }
+
+/* BUILDS */
+.builds-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 28px; animation: fadeUp 0.5s ease 0.2s both; }
+.build-mini { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+.build-mini-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.build-mini-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.build-mini-dot.r { background: var(--rammus); }
+.build-mini-dot.a { background: var(--amumu); }
+.build-mini-title { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; opacity: 0.7; }
+.items-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.item-chip { background: var(--panel2); border: 1px solid var(--border2); border-radius: 5px; padding: 3px 8px; font-size: 11px; color: var(--text2); white-space: nowrap; }
+.item-chip.core { border-color: var(--gold-dim); color: var(--gold); background: rgba(200,155,60,0.06); }
+
+/* API KEY */
+.api-section { margin-bottom: 20px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; animation: fadeUp 0.5s ease 0.15s both; }
+.api-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); opacity: 0.7; margin-bottom: 8px; }
+.api-row { display: flex; gap: 8px; }
+.api-input { flex: 1; background: var(--dark); border: 1px solid var(--border2); border-radius: 6px; padding: 9px 12px; font-family: 'Barlow', sans-serif; font-size: 12px; color: var(--text2); letter-spacing: 1px; outline: none; transition: border-color 0.2s; }
+.api-input:focus { border-color: var(--gold); }
+.api-input::placeholder { opacity: 0.3; letter-spacing: 0; }
+.btn-save-key { background: var(--panel2); border: 1px solid var(--border2); border-radius: 6px; padding: 9px 14px; font-size: 11px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text2); cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+.btn-save-key:hover { border-color: var(--gold); color: var(--gold); }
+.api-hint { font-size: 11px; opacity: 0.4; margin-top: 6px; line-height: 1.6; }
+.api-hint a { color: var(--gold); opacity: 0.9; text-decoration: none; }
+.api-hint a:hover { opacity: 1; text-decoration: underline; }
+.key-status { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 4px; margin-left: 8px; font-weight: 600; letter-spacing: 1px; }
+.key-status.set { background: rgba(5,150,105,0.15); color: #34D399; border: 1px solid rgba(5,150,105,0.3); }
+.key-status.missing { background: rgba(220,38,38,0.1); color: #F87171; border: 1px solid rgba(220,38,38,0.25); }
+
+/* FREE BADGE */
+.free-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(5,150,105,0.1); border: 1px solid rgba(5,150,105,0.25); border-radius: 6px; padding: 5px 10px; font-size: 11px; color: #34D399; font-weight: 600; letter-spacing: 1px; margin-bottom: 6px; }
+
+/* UPLOAD */
+.upload-section { animation: fadeUp 0.5s ease 0.25s both; }
+.upload-label { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); opacity: 0.7; margin-bottom: 10px; }
+.drop-zone { border: 1.5px dashed var(--border2); border-radius: 12px; padding: 36px 24px; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--panel); position: relative; overflow: hidden; margin-bottom: 12px; }
+.drop-zone:hover, .drop-zone.over { border-color: var(--gold); background: rgba(200,155,60,0.04); }
+.drop-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.drop-icon { font-size: 32px; margin-bottom: 8px; opacity: 0.5; }
+.drop-title { font-family: 'Cinzel', serif; font-size: 13px; color: var(--text2); margin-bottom: 4px; }
+.drop-sub { font-size: 11px; opacity: 0.4; }
+.preview { width: 100%; border-radius: 10px; border: 1px solid var(--border); display: none; margin-bottom: 12px; }
+.btn-go { width: 100%; padding: 15px; background: linear-gradient(135deg, #7A5A10, #C89B3C 50%, #7A5A10); border: none; border-radius: 8px; font-family: 'Cinzel', serif; font-size: 14px; font-weight: 700; color: #010A13; letter-spacing: 2px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 24px rgba(200,155,60,0.2); }
+.btn-go:hover { transform: translateY(-1px); box-shadow: 0 6px 32px rgba(200,155,60,0.35); }
+.btn-go:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* LOADING */
+.loading { display: none; text-align: center; padding: 48px 0; }
+.spinner { width: 44px; height: 44px; border: 2.5px solid var(--border); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.75s linear infinite; margin: 0 auto 16px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-family: 'Cinzel', serif; font-size: 12px; color: var(--gold); letter-spacing: 3px; animation: pulse 1.5s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
+
+/* RESULTS */
+.results { display: none; animation: fadeUp 0.5s ease; }
+.section-title { font-size: 9px; letter-spacing: 4px; text-transform: uppercase; color: var(--gold); opacity: 0.6; margin: 24px 0 10px; }
+.team-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 4px; }
+.champ-tag { background: var(--panel2); border: 1px solid var(--border2); border-radius: 6px; padding: 4px 10px; font-size: 12px; font-weight: 500; color: var(--text2); display: flex; align-items: center; gap: 5px; }
+.threat-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.threat-dot.high { background: var(--danger); box-shadow: 0 0 6px var(--danger); }
+.threat-dot.medium { background: var(--warn); }
+.threat-dot.low { background: var(--safe); }
+.damage-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--panel2); border: 1px solid var(--border2); border-radius: 6px; padding: 6px 12px; font-size: 12px; margin-top: 8px; }
+.score-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 4px; }
+.score-box { border-radius: 10px; padding: 18px; text-align: center; border: 1.5px solid; position: relative; overflow: hidden; }
+.score-box.rammus { border-color: var(--rammus); background: var(--rammus-dim); }
+.score-box.amumu { border-color: var(--amumu); background: var(--amumu-dim); }
+.score-box.winner::after { content: 'PICK THIS'; position: absolute; top: 8px; right: 8px; font-size: 8px; letter-spacing: 2px; background: var(--gold); color: var(--dark); padding: 2px 6px; border-radius: 3px; font-weight: 700; font-family: 'Barlow Condensed', sans-serif; }
+.score-num { font-family: 'Cinzel', serif; font-size: 40px; font-weight: 900; line-height: 1; margin-bottom: 4px; }
+.score-box.rammus .score-num { color: var(--rammus); }
+.score-box.amumu .score-num { color: var(--amumu); }
+.score-champ { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; opacity: 0.7; margin-bottom: 10px; }
+.score-bars { display: flex; flex-direction: column; gap: 4px; text-align: left; }
+.score-bar-row { display: flex; align-items: center; gap: 6px; font-size: 10px; opacity: 0.6; }
+.score-bar-track { flex: 1; height: 3px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
+.score-bar-fill { height: 100%; border-radius: 2px; }
+.score-box.rammus .score-bar-fill { background: var(--rammus); }
+.score-box.amumu .score-bar-fill { background: var(--amumu); }
+.verdict { border-radius: 12px; padding: 22px 24px; border: 1.5px solid; margin-bottom: 4px; }
+.verdict.r { border-color: var(--rammus); background: var(--rammus-dim); }
+.verdict.a { border-color: var(--amumu); background: var(--amumu-dim); }
+.verdict.n { border-color: var(--border2); background: var(--panel); }
+.verdict-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.verdict-icon { font-size: 28px; }
+.verdict-sublabel { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; opacity: 0.45; margin-bottom: 2px; }
+.verdict-name { font-family: 'Cinzel', serif; font-size: 22px; font-weight: 900; }
+.verdict.r .verdict-name { color: #7ED8A8; }
+.verdict.a .verdict-name { color: #BBA8E0; }
+.verdict.n .verdict-name { color: var(--gold-light); }
+.verdict-text { font-size: 13.5px; line-height: 1.75; }
+.verdict-text strong { color: var(--text2); font-weight: 600; }
+.matchup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.matchup-champ-card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+.mc-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.mc-name { font-size: 12px; font-weight: 600; color: var(--text2); }
+.mc-threat { margin-left: auto; font-size: 10px; font-weight: 700; letter-spacing: 1px; padding: 2px 6px; border-radius: 4px; }
+.mc-threat.high { background: rgba(220,38,38,0.15); color: #FCA5A5; }
+.mc-threat.medium { background: rgba(217,119,6,0.15); color: #FCD34D; }
+.mc-threat.low { background: rgba(5,150,105,0.1); color: #6EE7B7; }
+.mc-stats { display: flex; gap: 6px; flex-wrap: wrap; }
+.mc-stat { font-size: 10px; padding: 2px 7px; border-radius: 3px; background: var(--panel2); border: 1px solid var(--border); color: var(--text); }
+.build-rec { border-radius: 12px; padding: 20px 22px; border: 1.5px solid; display: flex; gap: 16px; align-items: flex-start; }
+.build-rec.armor { border-color: rgba(180,83,9,0.5); background: rgba(180,83,9,0.06); }
+.build-rec.mr { border-color: rgba(124,58,237,0.5); background: rgba(124,58,237,0.06); }
+.build-rec.both { border-color: var(--border2); background: var(--panel); }
+.build-icon-big { font-size: 36px; flex-shrink: 0; }
+.build-label-sm { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; opacity: 0.45; margin-bottom: 3px; }
+.build-title-big { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+.build-rec.armor .build-title-big { color: #FCD34D; }
+.build-rec.mr .build-title-big { color: #C4B5FD; }
+.build-rec.both .build-title-big { color: var(--gold-light); }
+.build-body-text { font-size: 13px; line-height: 1.7; margin-bottom: 10px; }
+.build-items-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; opacity: 0.4; margin-bottom: 6px; }
+.build-items { display: flex; flex-wrap: wrap; gap: 5px; }
+.bi { font-size: 11px; padding: 3px 9px; border-radius: 4px; font-weight: 500; }
+.bi.core { background: rgba(200,155,60,0.1); color: var(--gold); border: 1px solid rgba(200,155,60,0.25); }
+.bi.sit { background: var(--panel2); border: 1px solid var(--border2); color: var(--text); }
+.error-box { display: none; background: rgba(220,38,38,0.08); border: 1px solid rgba(220,38,38,0.3); border-radius: 8px; padding: 14px 18px; font-size: 13px; color: #FCA5A5; margin-top: 12px; line-height: 1.6; }
+.btn-reset { width: 100%; margin-top: 24px; background: transparent; border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-family: 'Barlow', sans-serif; font-size: 12px; letter-spacing: 1px; color: var(--text); cursor: pointer; transition: all 0.2s; }
+.btn-reset:hover { border-color: var(--gold); color: var(--gold); }
+.footer { text-align: center; margin-top: 48px; font-size: 11px; opacity: 0.25; letter-spacing: 1px; }
+
+@media (max-width: 480px) {
+  .stat-strip, .builds-row, .score-compare, .matchup-grid { grid-template-columns: 1fr; }
+  h1 { font-size: 11px; }
+  .score-num { font-size: 32px; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+<div class="bg-grid"></div>
+
+<div class="wrap">
+
+  <header>
+    <div class="header-icons">
+      <div class="h-champ">
+        <div class="h-champ-circle rc">🐢</div>
+        <div class="h-champ-name">Rammus</div>
+      </div>
+      <div class="h-vs">VS</div>
+      <div class="h-champ">
+        <div class="h-champ-circle ac">😢</div>
+        <div class="h-champ-name">Amumu</div>
+      </div>
+    </div>
+    <h1>Pick Advisor</h1>
+    <div class="tagline">Screenshot your enemy team · Get the right jungle pick</div>
+  </header>
+
+  <!-- PATCH STATS -->
+  <div class="stat-strip">
+    <div class="stat-card">
+      <div class="stat-card-icon">🐢</div>
+      <div class="stat-card-body">
+        <div class="stat-card-label">Patch 15.8</div>
+        <div class="stat-card-champ r">Rammus</div>
+        <div class="stat-row">
+          <span class="stat-pill wr">WR 53.1%</span>
+          <span class="stat-pill pr">PR 4.2%</span>
+          <span class="stat-pill tier">A-Tier</span>
+        </div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-icon">😢</div>
+      <div class="stat-card-body">
+        <div class="stat-card-label">Patch 15.8</div>
+        <div class="stat-card-champ a">Amumu</div>
+        <div class="stat-row">
+          <span class="stat-pill wr">WR 54.4%</span>
+          <span class="stat-pill pr">PR 8.7%</span>
+          <span class="stat-pill tier">S-Tier</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CORE BUILDS -->
+  <div class="builds-row">
+    <div class="build-mini">
+      <div class="build-mini-header">
+        <div class="build-mini-dot r"></div>
+        <div class="build-mini-title">Rammus Core Build</div>
+      </div>
+      <div class="items-grid">
+        <span class="item-chip core">Sunfire Aegis</span>
+        <span class="item-chip core">Thornmail</span>
+        <span class="item-chip core">Frozen Heart</span>
+        <span class="item-chip">Jak'Sho</span>
+        <span class="item-chip">Gargoyle</span>
+        <span class="item-chip">Warmog's</span>
+      </div>
+    </div>
+    <div class="build-mini">
+      <div class="build-mini-header">
+        <div class="build-mini-dot a"></div>
+        <div class="build-mini-title">Amumu Core Build</div>
+      </div>
+      <div class="items-grid">
+        <span class="item-chip core">Sunfire Aegis</span>
+        <span class="item-chip core">Abyssal Mask</span>
+        <span class="item-chip core">Demonic Embrace</span>
+        <span class="item-chip">Jak'Sho</span>
+        <span class="item-chip">Warmog's</span>
+        <span class="item-chip">Frozen Heart</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- API KEY -->
+  <div class="api-section" id="apiSection">
+    <div class="api-label">
+      Google Gemini API Key
+      <span class="key-status missing" id="keyStatus">NOT SET</span>
+    </div>
+    <div class="free-badge">✓ 100% FREE · No credit card needed</div>
+    <div class="api-row">
+      <input type="password" class="api-input" id="apiKeyInput" placeholder="AIza...">
+      <button class="btn-save-key" onclick="saveKey()">Save</button>
+    </div>
+    <div class="api-hint">
+      Get your free key at <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a> — sign in with Google, click "Create API Key", paste it here.<br>
+      Stored only in your browser. Never sent anywhere except Google's API.
+    </div>
+  </div>
+
+  <!-- UPLOAD -->
+  <div class="upload-section" id="uploadSection">
+    <div class="upload-label">Upload Enemy Team Screenshot</div>
+    <div class="drop-zone" id="dropZone">
+      <input type="file" id="fileInput" accept="image/*">
+      <div class="drop-icon">📸</div>
+      <div class="drop-title">Drop, click, or Ctrl+V to paste</div>
+      <div class="drop-sub">Take screenshot → Ctrl+V anywhere on page · PNG or JPG</div>
+    </div>
+    <img id="preview" class="preview">
+    <button class="btn-go" id="analyzeBtn" disabled onclick="analyze()">⚔ ANALYZE ENEMY TEAM</button>
+    <div class="error-box" id="errorBox"></div>
+  </div>
+
+  <!-- LOADING -->
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div class="loading-text">READING THE RIFT...</div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results" id="results"></div>
+
+  <div class="footer">RAMMUS VS AMUMU PICK ADVISOR · POWERED BY GOOGLE GEMINI (FREE)</div>
+
+</div>
+
+<script>
+const PATCH_DATA = {
+  rammus: {
+    vsAD: ["Sunfire Aegis","Thornmail","Frozen Heart","Gargoyle Stoneplate","Warmog's Armor","Randuin's Omen"],
+    vsMR: ["Sunfire Aegis","Hollow Radiance","Jak'Sho","Spirit Visage","Warmog's Armor","Force of Nature"],
+    vsMixed: ["Sunfire Aegis","Frozen Heart","Jak'Sho","Gargoyle Stoneplate","Spirit Visage","Warmog's Armor"]
+  },
+  amumu: {
+    vsAD: ["Sunfire Aegis","Frozen Heart","Abyssal Mask","Jak'Sho","Warmog's Armor","Gargoyle Stoneplate"],
+    vsMR: ["Sunfire Aegis","Abyssal Mask","Demonic Embrace","Spirit Visage","Warmog's Armor","Force of Nature"],
+    vsMixed: ["Sunfire Aegis","Abyssal Mask","Jak'Sho","Demonic Embrace","Warmog's Armor","Frozen Heart"]
+  }
+};
+
+const CHAMP_DAMAGE = {
+  "jinx":"AD","caitlyn":"AD","vayne":"AD","miss fortune":"AD","ashe":"AD","tristana":"AD","twitch":"AD",
+  "kog'maw":"AD","ezreal":"MIXED","lucian":"AD","jhin":"AD","draven":"AD","kalista":"AD","sivir":"AD",
+  "varus":"AD","zeri":"AD","samira":"AD","nilah":"AD","aphelios":"AD","xayah":"AD","jax":"AD","fiora":"AD",
+  "tryndamere":"AD","master yi":"AD","garen":"AD","darius":"AD","riven":"AD","pantheon":"AD",
+  "camille":"MIXED","irelia":"MIXED","olaf":"AD","nasus":"AD","illaoi":"AD","wukong":"AD","renekton":"AD",
+  "urgot":"MIXED","jayce":"MIXED","graves":"AD","kha'zix":"AD","rengar":"AD","nocturne":"AD","vi":"AD",
+  "jarvan":"AD","xin zhao":"AD","hecarim":"AD","shyvana":"MIXED","udyr":"AD","warwick":"MIXED",
+  "volibear":"MIXED","talon":"AD","zed":"AD","qiyana":"AD","yone":"MIXED","yasuo":"AD","lee sin":"AD",
+  "kindred":"AD","nidalee":"MIXED","elise":"MIXED","poppy":"AD","malphite":"AP","sett":"AD",
+  "mordekaiser":"AP","gwen":"MIXED","quinn":"AD","trundle":"AD","yorick":"AD","gangplank":"MIXED",
+  "lux":"AP","morgana":"AP","annie":"AP","syndra":"AP","orianna":"AP","viktor":"AP","cassiopeia":"AP",
+  "brand":"AP","zyra":"AP","vel'koz":"AP","xerath":"AP","ziggs":"AP","veigar":"AP","karthus":"AP",
+  "malzahar":"AP","swain":"AP","rumble":"AP","heimerdinger":"AP","teemo":"MIXED","diana":"AP",
+  "akali":"MIXED","katarina":"MIXED","fizz":"AP","ahri":"MIXED","leblanc":"AP","zoe":"AP","vex":"AP",
+  "lissandra":"AP","taliyah":"AP","aurelion sol":"AP","twisted fate":"MIXED","corki":"MIXED",
+  "kennen":"AP","vladimir":"AP","cho'gath":"AP","galio":"AP","maokai":"MIXED","amumu":"AP","nunu":"AP",
+  "sejuani":"MIXED","zac":"AP","rammus":"AD","nautilus":"MIXED","leona":"MIXED","thresh":"MIXED",
+  "soraka":"AP","lulu":"MIXED","janna":"AP","nami":"AP","sona":"AP","karma":"MIXED","seraphine":"AP",
+  "zilean":"AP","rell":"AD","alistar":"MIXED","blitzcrank":"MIXED","pyke":"AD","bard":"MIXED",
+  "rakan":"MIXED","kayle":"MIXED","neeko":"AP","lillia":"AP","fiddlesticks":"AP","ivern":"AP",
+  "ekko":"AP","sylas":"AP","ekko":"AP"
+};
+
+function getDamageType(c) {
+  return CHAMP_DAMAGE[c.toLowerCase().replace(/['']/g,"'")] || "MIXED";
+}
+
+// Key management
+function saveKey() {
+  const v = document.getElementById('apiKeyInput').value.trim();
+  if (!v.startsWith('AIza')) {
+    alert("That doesn't look like a Gemini API key — it should start with AIza.");
+    return;
+  }
+  localStorage.setItem('gemini_key', v);
+  updateKeyStatus();
+  document.getElementById('apiKeyInput').value = '';
+}
+
+function getKey() { return localStorage.getItem('gemini_key') || ''; }
+
+function updateKeyStatus() {
+  const k = getKey();
+  const el = document.getElementById('keyStatus');
+  if (k) {
+    el.className = 'key-status set'; el.textContent = '✓ SET';
+    if (imageBase64) document.getElementById('analyzeBtn').disabled = false;
+  } else {
+    el.className = 'key-status missing'; el.textContent = 'NOT SET';
+    document.getElementById('analyzeBtn').disabled = true;
+  }
+}
+
+// File handling
+let imageBase64 = null, imageType = null;
+
+document.getElementById('fileInput').addEventListener('change', e => {
+  if (e.target.files[0]) loadFile(e.target.files[0]);
+});
+
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('over');
+  if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]);
+});
+
+// Ctrl+V / paste support
+document.addEventListener('paste', e => {
+  const items = e.clipboardData?.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type.startsWith('image/')) {
+      const file = item.getAsFile();
+      if (file) {
+        loadFile(file);
+        // Flash the drop zone to confirm paste
+        dz.classList.add('over');
+        setTimeout(() => dz.classList.remove('over'), 300);
+      }
+      break;
+    }
+  }
+});
+
+function loadFile(file) {
+  imageType = file.type || 'image/png';
+  const r = new FileReader();
+  r.onload = ev => {
+    imageBase64 = ev.target.result.split(',')[1];
+    const prev = document.getElementById('preview');
+    prev.src = ev.target.result;
+    prev.style.display = 'block';
+    dz.style.display = 'none';
+    if (getKey()) document.getElementById('analyzeBtn').disabled = false;
+  };
+  r.readAsDataURL(file);
+}
+
+// Analyze
+async function analyze() {
+  const key = getKey();
+  if (!key) { showError('Please enter your Gemini API key first.'); return; }
+
+  document.getElementById('errorBox').style.display = 'none';
+  document.getElementById('uploadSection').style.opacity = '0.4';
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('results').style.display = 'none';
+
+  const prompt = `You are a League of Legends expert jungle pick advisor. Analyze this screenshot and identify the enemy team champions.
+
+Then score Rammus and Amumu as jungle picks against this team (0-10 each).
+
+RAMMUS knowledge:
+- Hard counters: AD-heavy teams, auto-attackers, marksmen (Jinx, Caitlyn, Vayne, MF, etc), fighters (Jax, Fiora, Tryndamere, etc)
+- Powerball initiation, Defensive Ball Curl (huge armor), Puncturing Taunt CC
+- WEAK vs AP-heavy teams — his kit gains nothing vs magic damage
+- Score HIGH when: 3+ physical damage dealers, auto-attack reliant enemies
+
+AMUMU knowledge:
+- Hard counters: grouped/immobile teams, teamfight comps, melee-heavy lineups
+- Bandage Toss long-range engage, Curse of the Sad Mummy huge AoE ult
+- Synergizes with AP allies (Abyssal Mask)
+- WEAK vs mobile/poke-heavy, disengage comps (Sivir ult counters his engage)
+- Score HIGH when: enemies are immobile, team has AoE follow-up, or AP-heavy team
+
+BUILD PRIORITY:
+- 3+ AD sources = ARMOR
+- 3+ AP sources = MAGIC RESIST  
+- Mixed = MIXED
+
+Threat levels: HIGH = primary carry/fed threat, MEDIUM = secondary, LOW = support/utility
+
+Respond ONLY with valid JSON, absolutely no markdown or extra text:
+{
+  "detected": ["champ1","champ2","champ3","champ4","champ5"],
+  "damageProfile": "AD-Heavy|AP-Heavy|Mixed",
+  "adCount": 3,
+  "apCount": 2,
+  "rammusScore": 7,
+  "amumuScore": 5,
+  "rammusCounterFactors": ["short reason 1","short reason 2"],
+  "amumuCounterFactors": ["short reason 1","short reason 2"],
+  "recommendation": "RAMMUS|AMUMU|EITHER",
+  "recommendationReason": "2-3 sentences explaining the pick choice",
+  "rammusNote": "one sentence on how Rammus fits",
+  "amumuNote": "one sentence on how Amumu fits",
+  "threatLevels": {"champ1":"high","champ2":"medium","champ3":"low","champ4":"medium","champ5":"low"},
+  "buildRecommendation": "ARMOR|MAGIC RESIST|MIXED",
+  "buildReason": "1-2 sentences on why this build priority"
+}`;
+
+  try {
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { inline_data: { mime_type: imageType, data: imageBase64 } },
+              { text: prompt }
+            ]
+          }],
+          generationConfig: { temperature: 0.2, maxOutputTokens: 1000 }
+        })
+      }
+    );
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      const msg = err.error?.message || `API error ${resp.status}`;
+      if (resp.status === 400 && msg.includes('API_KEY')) throw new Error('Invalid API key. Double-check you copied it correctly from Google AI Studio.');
+      if (resp.status === 429) throw new Error('Rate limit hit. Wait a moment and try again.');
+      throw new Error(msg);
+    }
+
+    const data = await resp.json();
+    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (!raw) throw new Error("Empty response from Gemini. Try again.");
+
+    let result;
+    try {
+      result = JSON.parse(raw.replace(/```json|```/g, '').trim());
+    } catch {
+      // Try to extract JSON from response
+      const match = raw.match(/\{[\s\S]*\}/);
+      if (match) result = JSON.parse(match[0]);
+      else throw new Error("Couldn't parse the response. Try a clearer screenshot of champ select.");
+    }
+
+    renderResults(result);
+  } catch (err) {
+    document.getElementById('uploadSection').style.opacity = '1';
+    showError(err.message || 'Something went wrong. Check your API key and try again.');
+  } finally {
+    document.getElementById('loading').style.display = 'none';
+  }
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorBox');
+  el.textContent = '⚠ ' + msg;
+  el.style.display = 'block';
+}
+
+function renderResults(r) {
+  const recClass = r.recommendation === 'RAMMUS' ? 'r' : r.recommendation === 'AMUMU' ? 'a' : 'n';
+  const recIcon = r.recommendation === 'RAMMUS' ? '🐢' : r.recommendation === 'AMUMU' ? '😢' : '⚔️';
+  const recName = r.recommendation === 'EITHER' ? 'Either Works' : r.recommendation;
+
+  const buildClass = r.buildRecommendation === 'ARMOR' ? 'armor' : r.buildRecommendation === 'MAGIC RESIST' ? 'mr' : 'both';
+  const buildIcon = r.buildRecommendation === 'ARMOR' ? '🛡️' : r.buildRecommendation === 'MAGIC RESIST' ? '🔮' : '⚖️';
+
+  const pd = PATCH_DATA;
+  const br = r.buildRecommendation;
+  const rammusItems = br === 'ARMOR' ? pd.rammus.vsAD : br === 'MAGIC RESIST' ? pd.rammus.vsMR : pd.rammus.vsMixed;
+  const amumuItems = br === 'ARMOR' ? pd.amumu.vsAD : br === 'MAGIC RESIST' ? pd.amumu.vsMR : pd.amumu.vsMixed;
+  const recItems = r.recommendation === 'RAMMUS' ? rammusItems : r.recommendation === 'AMUMU' ? amumuItems : pd.amumu.vsMixed;
+
+  const champs = r.detected || [];
+  const threats = r.threatLevels || {};
+
+  const champTagsHTML = champs.map(c => {
+    const t = (threats[c] || threats[c.toLowerCase()] || 'medium').toLowerCase();
+    return `<div class="champ-tag"><div class="threat-dot ${t}"></div>${c}</div>`;
+  }).join('');
+
+  const matchupHTML = champs.slice(0,6).map(c => {
+    const t = (threats[c] || threats[c.toLowerCase()] || 'medium').toLowerCase();
+    const dmg = getDamageType(c);
+    const dmgLabel = dmg === 'AD' ? '⚔️ AD' : dmg === 'AP' ? '✨ AP' : '🔀 Mixed';
+    const tLabel = t === 'high' ? 'HIGH' : t === 'medium' ? 'MED' : 'LOW';
+    return `<div class="matchup-champ-card">
+      <div class="mc-header">
+        <div class="mc-name">${c}</div>
+        <div class="mc-threat ${t}">${tLabel}</div>
+      </div>
+      <div class="mc-stats"><span class="mc-stat">${dmgLabel}</span></div>
+    </div>`;
+  }).join('');
+
+  const rFactors = (r.rammusCounterFactors || []).slice(0,2);
+  const aFactors = (r.amumuCounterFactors || []).slice(0,2);
+
+  const rBarsHTML = rFactors.map(f => `<div class="score-bar-row">
+    <span style="min-width:64px;font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.substring(0,18)}</span>
+    <div class="score-bar-track"><div class="score-bar-fill" style="width:${55+Math.random()*35}%"></div></div>
+  </div>`).join('');
+
+  const aBarsHTML = aFactors.map(f => `<div class="score-bar-row">
+    <span style="min-width:64px;font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.substring(0,18)}</span>
+    <div class="score-bar-track"><div class="score-bar-fill" style="width:${55+Math.random()*35}%"></div></div>
+  </div>`).join('');
+
+  const rWinner = r.recommendation === 'RAMMUS' ? 'winner' : '';
+  const aWinner = r.recommendation === 'AMUMU' ? 'winner' : '';
+
+  document.getElementById('results').innerHTML = `
+    <div class="section-title">Enemy Team Detected</div>
+    <div class="team-row">${champTagsHTML || '<span style="opacity:0.4;font-size:12px">No champions detected — try a clearer screenshot</span>'}</div>
+    <div class="damage-badge">
+      <span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;opacity:0.5">Damage Profile</span>
+      <strong style="color:var(--text2)">${r.damageProfile || 'Mixed'}</strong>
+      <span style="opacity:0.4;font-size:11px">(${r.adCount||'?'} AD · ${r.apCount||'?'} AP)</span>
+    </div>
+
+    <div class="section-title">Matchup Score</div>
+    <div class="score-compare">
+      <div class="score-box rammus ${rWinner}">
+        <div class="score-num">${r.rammusScore}</div>
+        <div class="score-champ">🐢 Rammus</div>
+        <div class="score-bars">${rBarsHTML}</div>
+      </div>
+      <div class="score-box amumu ${aWinner}">
+        <div class="score-num">${r.amumuScore}</div>
+        <div class="score-champ">😢 Amumu</div>
+        <div class="score-bars">${aBarsHTML}</div>
+      </div>
+    </div>
+
+    <div class="section-title">Recommendation</div>
+    <div class="verdict ${recClass}">
+      <div class="verdict-head">
+        <div class="verdict-icon">${recIcon}</div>
+        <div>
+          <div class="verdict-sublabel">Play This</div>
+          <div class="verdict-name">${recName}</div>
+        </div>
+      </div>
+      <div class="verdict-text">
+        ${r.recommendationReason}<br><br>
+        🐢 <strong>Rammus:</strong> ${r.rammusNote}<br>
+        😢 <strong>Amumu:</strong> ${r.amumuNote}
+      </div>
+    </div>
+
+    <div class="section-title">Enemy Threat Breakdown</div>
+    <div class="matchup-grid">${matchupHTML}</div>
+
+    <div class="section-title">Build Priority</div>
+    <div class="build-rec ${buildClass}">
+      <div class="build-icon-big">${buildIcon}</div>
+      <div style="flex:1">
+        <div class="build-label-sm">Focus On</div>
+        <div class="build-title-big">${r.buildRecommendation || 'SITUATIONAL'}</div>
+        <div class="build-body-text">${r.buildReason}</div>
+        <div class="build-items-label">Recommended Items (${r.recommendation === 'EITHER' ? 'Amumu' : r.recommendation})</div>
+        <div class="build-items">
+          ${recItems.slice(0,3).map(i => `<span class="bi core">${i}</span>`).join('')}
+          ${recItems.slice(3).map(i => `<span class="bi sit">${i}</span>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-reset" onclick="resetTool()">↩ Analyze Another Screenshot</button>
+  `;
+
+  document.getElementById('uploadSection').style.display = 'none';
+  document.getElementById('results').style.display = 'block';
+}
+
+function resetTool() {
+  imageBase64 = null; imageType = null;
+  document.getElementById('fileInput').value = '';
+  document.getElementById('preview').style.display = 'none';
+  document.getElementById('preview').src = '';
+  document.getElementById('dropZone').style.display = 'block';
+  document.getElementById('analyzeBtn').disabled = true;
+  document.getElementById('uploadSection').style.display = 'block';
+  document.getElementById('uploadSection').style.opacity = '1';
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('results').innerHTML = '';
+  document.getElementById('errorBox').style.display = 'none';
+}
+
+updateKeyStatus();
+</script>
+</body>
+</html>
